@@ -418,6 +418,23 @@ export default class PDFDocument {
     }
   }
 
+  setMetadata(key: string, value: string): void {
+    console.log(key);
+    assertIs(value, 'value', ['string']);
+    this.getInfoDict().set(PDFName.of(key), PDFHexString.fromText(value));
+  }
+
+  getMetadata(key: string): string | undefined {
+    const value = this.getInfoDict().lookup(PDFName.of(key));
+    if (!value) return undefined;
+    assertIsLiteralOrHexString(value);
+    return value.decodeText();
+  }
+
+  deleteMetadata(key: string): boolean {
+    return this.getInfoDict().delete(PDFName.of(key));
+  }
+
   /**
    * Set this document's author metadata. The author will appear in the
    * "Document Properties" section of most PDF readers. For example:

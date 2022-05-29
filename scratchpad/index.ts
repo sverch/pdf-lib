@@ -19,6 +19,7 @@ import { PDFDocument } from 'src/index';
   const page2 = pdfDoc2.getPage(0);
   page2.drawImage(image2, { ...image2.scale(0.5), x: 100, y: 100 });
 
+  pdfDoc2.setMetadata("foo", "bar");
   const pdfBytes = await pdfDoc2.save();
 
   fs.writeFileSync('out.pdf', pdfBytes);

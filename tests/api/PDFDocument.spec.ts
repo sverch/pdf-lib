@@ -715,4 +715,33 @@ describe(`PDFDocument`, () => {
       expect(savedDoc1).toEqual(savedDoc2);
     });
   });
+  describe(`setMetadata() method`, () => {
+    it(`Saves to the same value after round tripping`, async () => {
+      const pdfDoc1 = await PDFDocument.create({ updateMetadata: true });
+      const pdfDoc2 = await PDFDocument.create({ updateMetadata: true });
+      const pdfDoc3 = await PDFDocument.create({ updateMetadata: true });
+
+      pdfDoc1.setMetadata("foo", "");
+      let savedDoc1 = await pdfDoc1.save();
+      pdfDoc1.setMetadata("foo", savedDoc1.toString());
+      expect(pdfDoc1.getMetadata("foo")).toEqual(savedDoc1.toString());
+      pdfDoc1.setMetadata("foo", "");
+      pdfDoc2.setMetadata("foo", "");
+      expect(pdfDoc1.getMetadata("foo")).toBeDefined();
+      expect(pdfDoc2.getMetadata("foo")).toBeDefined();
+      savedDoc1 = await pdfDoc1.save();
+      let savedDoc2 = await pdfDoc2.save();
+      expect(savedDoc1).toEqual(savedDoc2);
+
+      pdfDoc1.deleteMetadata("foo");
+      pdfDoc2.deleteMetadata("foo");
+      expect(pdfDoc1.getMetadata("foo")).not.toBeDefined();
+      expect(pdfDoc2.getMetadata("foo")).not.toBeDefined();
+      savedDoc1 = await pdfDoc1.save();
+      savedDoc2 = await pdfDoc2.save();
+      const savedDoc3 = await pdfDoc3.save();
+      expect(savedDoc1).toEqual(savedDoc2);
+      expect(savedDoc2).toEqual(savedDoc3);
+    });
+  });
 });
