@@ -715,4 +715,74 @@ describe(`PDFDocument`, () => {
       expect(savedDoc1).toEqual(savedDoc2);
     });
   });
+
+  describe(`deleteAttachment() method`, () => {
+    it(`Can delete attachments from an existing pdf file`, async () => {
+      const pdfDoc = await PDFDocument.load(hasAttachmentPdfBytes);
+
+      const attachments1 = pdfDoc.getAttachments();
+      expect(attachments1.length).toEqual(2);
+      const jpgAttachmentExtractedBytes1 = attachments1.find(
+        (attachment) => attachment.name === 'cat_riding_unicorn.jpg',
+      )!;
+      const pdfAttachmentExtractedBytes1 = attachments1.find(
+        (attachment) => attachment.name === 'us_constitution.pdf',
+      )!;
+      expect(pdfAttachmentExtractedBytes1).toBeDefined();
+      expect(jpgAttachmentExtractedBytes1).toBeDefined();
+      expect(attachments1).toHaveLength(2);
+
+      expect(pdfDoc.deleteAttachment('cat_riding_unicorn.jpg')).toBeTruthy();
+      const attachments2 = pdfDoc.getAttachments();
+      const jpgAttachmentExtractedBytes2 = attachments2.find(
+        (attachment) => attachment.name === 'cat_riding_unicorn.jpg',
+      )!;
+      const pdfAttachmentExtractedBytes2 = attachments2.find(
+        (attachment) => attachment.name === 'us_constitution.pdf',
+      )!;
+      expect(pdfAttachmentExtractedBytes2).toBeDefined();
+      expect(jpgAttachmentExtractedBytes2).not.toBeDefined();
+      expect(attachments2).toHaveLength(1);
+
+      expect(pdfDoc.deleteAttachment('us_constitution.pdf')).toBeTruthy();
+      const attachments3 = pdfDoc.getAttachments();
+      const jpgAttachmentExtractedBytes3 = attachments3.find(
+        (attachment) => attachment.name === 'cat_riding_unicorn.jpg',
+      )!;
+      const pdfAttachmentExtractedBytes3 = attachments3.find(
+        (attachment) => attachment.name === 'us_constitution.pdf',
+      )!;
+      expect(pdfAttachmentExtractedBytes3).not.toBeDefined();
+      expect(jpgAttachmentExtractedBytes3).not.toBeDefined();
+      expect(attachments3).toHaveLength(0);
+    });
+
+    it(`Has the same bytes after adding and deleting attachments`, async () => {
+      const pdfDoc1 = await PDFDocument.create({ updateMetadata: false });
+      const pdfDoc2 = await PDFDocument.create({ updateMetadata: false });
+
+      /*const jpgAttachmentBytes = fs.readFileSync(
+        'assets/images/cat_riding_unicorn.jpg',
+      );*/
+
+      await pdfDoc1.attach("foo", 'cat_riding_unicorn.jpg', {
+        mimeType: 'text/plain',
+        description: 'Cool cat riding a unicorn! 🦄🐈🕶️',
+        creationDate: new Date('2019/12/01'),
+        modificationDate: new Date('2020/04/19'),
+      });
+
+      // This is the currently documented behavior before save has been called
+      expect(pdfDoc1.getAttachments()).toHaveLength(0);
+      let savedDoc1 = await pdfDoc1.save();
+      expect(pdfDoc1.getAttachments()).toHaveLength(1);
+      expect(pdfDoc1.deleteAttachment('cat_riding_unicorn.jpg')).toBeTruthy();
+      savedDoc1 = await pdfDoc1.save();
+      expect(pdfDoc1.getAttachments()).toHaveLength(0);
+
+      const savedDoc2 = await pdfDoc2.save();
+      // XXX: Dead end!
+      expect(savedDoc1).not.toEqual(savedDoc2);
+    });
+  });
 });

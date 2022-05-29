@@ -945,6 +945,37 @@ export default class PDFDocument {
     });
   }
 
+  private deleteAttachmentRaw(name: string): boolean {
+    if (!this.catalog.has(PDFName.of('Names'))) return false;
+    const Names = this.catalog.lookup(PDFName.of('Names'), PDFDict);
+
+    if (!Names.has(PDFName.of('EmbeddedFiles'))) return false;
+    const EmbeddedFiles = Names.lookup(PDFName.of('EmbeddedFiles'), PDFDict);
+
+    if (!EmbeddedFiles.has(PDFName.of('Names'))) return false;
+    const EFNames = EmbeddedFiles.lookup(PDFName.of('Names'), PDFArray);
+
+    for (let idx = 0, len = EFNames.size(); idx < len; idx += 2) {
+      const fileName = EFNames.lookup(idx) as PDFHexString | PDFString;
+      console.log(name);
+      console.log(fileName.decodeText());
+      if (fileName.decodeText() === name) {
+        EFNames.remove(idx + 1);
+        EFNames.remove(idx);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  deleteAttachment(
+    name: string,
+  ): boolean {
+    return this.deleteAttachmentRaw(name);
+    console.log(name);
+    console.log(this.embeddedFiles);
+  }
+
   /**
    * Embed a font into this document. The input data can be provided in multiple
    * formats:
